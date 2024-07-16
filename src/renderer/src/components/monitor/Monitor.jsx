@@ -40,6 +40,7 @@ export default function Monitor({ device }) {
   const [ reconnecting, setReconnecting ] = React.useState(false);
   const [ lines, setLines ] = React.useState([]);
   const [ write, setWrite ] = React.useState('');
+  const [ scrollTop, setScrollTop ] = React.useState(0);
 
   /**
    * Reconnects the device upon disconnection
@@ -160,12 +161,34 @@ export default function Monitor({ device }) {
   }, [device.path]);
 
   /**
+   * Observe last scroll position
+   * 
+   * @returns {void}
+   */
+  React.useEffect(() => {
+    const element = document.getElementById('lines');
+    const onScroll = (e) => setScrollTop(e.target.scrollTop);
+
+    element.addEventListener('scroll', onScroll);
+
+    return () => {
+      element.removeEventListener('scroll', onScroll);
+    }
+  }, []);
+
+  /**
    * Scroll to bottom on lines change
    * 
    * @returns {void}
    */
   React.useEffect(() => {
     const element = document.getElementById('lines');
+    const currentScroll = element.scrollHeight - element.clientHeight - 100;
+
+    if (scrollTop < currentScroll) {
+      return;
+    }
+
     element.scrollTop = element.scrollHeight;
   }, [lines.length])
 
