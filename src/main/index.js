@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -6,9 +6,13 @@ import icon from '../../resources/icon.png?asset'
 // custom api
 import * as Device from '../api/device';
 
+// configure menu
+import { menu } from './menu'
+
+let mainWindow;
 function createWindow() {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -36,6 +40,8 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  Menu.setApplicationMenu(menu);
 }
 
 // This method will be called when Electron has finished
@@ -81,3 +87,6 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
+app.on('menu:new-monitor', () => {
+  mainWindow.webContents.send('menu:new-monitor');
+});

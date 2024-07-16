@@ -5,13 +5,6 @@ import { ArrowPathIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from '
 import { Buffer } from 'buffer';
 
 /**
- * Initialization timeout
- * 
- * @type {Number}
- */
-let timeout = null;
-
-/**
  * Retry count
  * 
  * @type {Number}
@@ -142,18 +135,13 @@ export default function Monitor({ device }) {
       reconnect();
     }
 
-    // add timeout because context rerenders the component
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      setMounted(true);
-      ipcRenderer.on(`device:data-${device.locationId}`, onData);
-      ipcRenderer.on(`device:error-${device.locationId}`, onError);
-      ipcRenderer.on(`device:close-${device.locationId}`, onClose);
-    }, 100);
+    setMounted(true);
+    ipcRenderer.on(`device:data-${device.locationId}`, onData);
+    ipcRenderer.on(`device:error-${device.locationId}`, onError);
+    ipcRenderer.on(`device:close-${device.locationId}`, onClose);
 
     return () => {
       setMounted(false);
-      clearTimeout(timeout);
       ipcRenderer.removeListener(`device:data-${device.locationId}`, onData);
       ipcRenderer.removeListener(`device:error-${device.locationId}`, onError);
       ipcRenderer.removeListener(`device:close-${device.locationId}`, onClose);
@@ -183,7 +171,7 @@ export default function Monitor({ device }) {
    */
   React.useEffect(() => {
     const element = document.getElementById('lines');
-    const currentScroll = element.scrollHeight - element.clientHeight - 100;
+    const currentScroll = element.scrollHeight - element.clientHeight - 200;
 
     if (scrollTop < currentScroll) {
       return;

@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "An Electron application with React",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "Charles Zamora <charles.andacc@gmail.com>",
   "homepage": "https://electron-vite.org",
+  "productName": "Serial Monitor",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",

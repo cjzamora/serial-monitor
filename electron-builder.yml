@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: serial-monitor
+productName: Serial Monitor
 directories:
   buildResources: build
 files:

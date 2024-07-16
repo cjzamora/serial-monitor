@@ -9,6 +9,7 @@ import { Monitors, NewMonitorDialog, Tabs } from './';
  */
 export default function AppMain() {
   const app = React.useContext(AppContext);
+  const { ipcRenderer } = window.electron;
 
   /**
    * Handle new dialog click
@@ -18,6 +19,23 @@ export default function AppMain() {
   const onNewDialogClick = () => {
     app.setNewDialog(true);
   }
+
+  /**
+   * On menu events
+   * 
+   * @returns {void}
+   */
+  React.useEffect(() => {
+    const onNewMonitor = () => {
+      app.setNewDialog(true);
+    }
+    
+    ipcRenderer.on('menu:new-monitor', onNewMonitor);
+
+    return () => {
+      ipcRenderer.removeListener('menu:new-monitor', onNewMonitor);
+    }
+  }, []);
 
   return (
     <>

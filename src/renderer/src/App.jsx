@@ -5,6 +5,11 @@ import { ToastContainer } from 'react-toastify';
 
 import 'react-toastify/dist/ReactToastify.css';
 
+/**
+ * App component
+ * 
+ * @returns {React.JSX}
+ */
 export default function App() {
   return (
     <AppProvider>

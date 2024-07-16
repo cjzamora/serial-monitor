@@ -51,7 +51,7 @@ export default function Tabs() {
 
   return (
     <div className="flex items-center border-b">
-      <div className="w-full">
+      <div className="self-end w-full">
         {Object.keys(app.tabs).map((tab) => (
           <div 
             key={tab}
@@ -60,7 +60,8 @@ export default function Tabs() {
               inline-flex
               border-r
               inline-block
-              p-2
+              px-2
+              py-4
               ${app.tab === tab ? 'border-t-4 border-t-black' : 'border-t-4'}
             `}
             onClick={() => onTabClick(tab)}
@@ -77,9 +78,9 @@ export default function Tabs() {
           </div>
         ))}
       </div>
-      <div className="border-l px-2">
-        <button className="flex items-center" onClick={onAddMonitorClick}>
-          <span className="text-sm">Add</span>
+      <div className="border-l px-2 py-2">
+        <button className="flex items-center btn btn-dark" onClick={onAddMonitorClick}>
+          <span className="text-sm">New</span>
           <PlusIcon className="w-4 h-4" />
         </button>
       </div>
