@@ -1,6 +1,6 @@
 # serial-monitor
 
-Vite + React + Electron serial device monitor with multi-tab support
+A simple desktop serial monitoring app for Arduino, Raspberry PI, ESP32 and other micro-controller devices that supports UART / serial protocol.
 
 ## Recommended IDE Setup
 
