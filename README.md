@@ -1,6 +1,6 @@
 # serial-monitor
 
-An Electron application with React
+Vite + React + Electron serial device monitor with multi-tab support
 
 ## Recommended IDE Setup
 
