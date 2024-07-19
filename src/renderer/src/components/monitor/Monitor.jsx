@@ -29,11 +29,39 @@ export default function Monitor({ device }) {
   const app = React.useContext(AppContext);
   const { ipcRenderer } = window.electron;
   const { notify } = useToast();
+
+  // states
   const [ mounted, setMounted ] = React.useState(false);
   const [ reconnecting, setReconnecting ] = React.useState(false);
   const [ lines, setLines ] = React.useState([]);
   const [ write, setWrite ] = React.useState('');
   const [ scrollTop, setScrollTop ] = React.useState(0);
+
+  // refs (this sucks but react...)
+  const appRef = React.useRef(app);
+  const mountedRef = React.useRef(mounted);
+
+  /**
+   * Attach event listeners
+   * 
+   * @returns {void}
+   */
+  const attachListeners = () => {
+    ipcRenderer.on(`device:data-${device.locationId || 'none'}`, onData);
+    ipcRenderer.on(`device:error-${device.locationId || 'none'}`, onError);
+    ipcRenderer.on(`device:close-${device.locationId || 'none'}`, onClose);
+  }
+
+  /**
+   * Detach event listeners
+   * 
+   * @returns {void}
+   */
+  const detachListeners = () => {
+    ipcRenderer.removeListener(`device:data-${device.locationId || 'none'}`, onData);
+    ipcRenderer.removeListener(`device:error-${device.locationId || 'none'}`, onError);
+    ipcRenderer.removeListener(`device:close-${device.locationId || 'none'}`, onClose);
+  }
 
   /**
    * Reconnects the device upon disconnection
@@ -42,10 +70,16 @@ export default function Monitor({ device }) {
    */
   const reconnect = async () => {
     // update states
-    app.setTabData(app.tab, 'connected', false);
+    appRef.current.setTabData(appRef.current.tab, { connected: false });
     setReconnecting(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // wait for 2 seconds before reconnecting
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // do not reconnect if we are not mounted
+    if (!mountedRef.current) {
+      return;
+    }
 
     // if retry exceeds maximum retry
     if (retry >= maxRetry) {
@@ -56,7 +90,11 @@ export default function Monitor({ device }) {
     try {
       // invoke device connect
       await ipcRenderer.invoke('device:connect', device, true);
-      app.setTabData(app.tab, 'connected', true);
+      // update states
+      appRef.current.setTabData(appRef.current.tab, { connected: true });
+
+      // reset retry count
+      retry = 0;
       setReconnecting(false);
     } catch(e) {
       // increment retry count
@@ -64,6 +102,48 @@ export default function Monitor({ device }) {
       // reconnect
       reconnect();
     }
+  }
+
+  /**
+   * Handle data event
+   * 
+   * @param {Object} event
+   * 
+   * @returns {void}
+   */
+  const onData = (_, { data }) => {
+    const buffer = Buffer.from(data);
+    const date = new Date().toLocaleTimeString();
+    setLines(prev => ([ ...prev, `[${date}]: ${buffer.toString()}` ]));
+  }
+
+  /**
+   * Handle error event
+   * 
+   * @param {Object} event
+   * 
+   * @returns {void}
+   */
+  const onError = (_, { err }) => {
+    console.log('error');
+  }
+
+  /**
+   * Handle close event
+   * 
+   * @param {Object} event
+   * 
+   * @returns {void}
+   */
+  const onClose = async (_, { retry }) => {
+    // if closed via disconnect method, do not retry
+    if (!retry) {
+      // make sure to detach listeners
+      detachListeners();
+      return;
+    }
+
+    reconnect();
   }
 
   /**
@@ -113,40 +193,28 @@ export default function Monitor({ device }) {
       return;
     }
 
-    // on data event
-    const onData = (_, { data }) => {
-      const buffer = Buffer.from(data);
-      const date = new Date().toLocaleTimeString();
-      setLines(prev => ([ ...prev, `[${date}]: ${buffer.toString()}` ]));
-    }
-
-    // on error event
-    const onError = (_, { err }) => {
-      console.log('error');
-    }
-
-    // on close event
-    const onClose = async (_, { retry }) => {
-      // if closed via disconnect method, do not retry
-      if (!retry) {
-        return;
-      }
-
-      reconnect();
-    }
-
+    detachListeners();
     setMounted(true);
-    ipcRenderer.on(`device:data-${device.locationId}`, onData);
-    ipcRenderer.on(`device:error-${device.locationId}`, onError);
-    ipcRenderer.on(`device:close-${device.locationId}`, onClose);
+    attachListeners();
+
+    mountedRef.current = true;
 
     return () => {
       setMounted(false);
-      ipcRenderer.removeListener(`device:data-${device.locationId}`, onData);
-      ipcRenderer.removeListener(`device:error-${device.locationId}`, onError);
-      ipcRenderer.removeListener(`device:close-${device.locationId}`, onClose);
+      detachListeners();
+
+      mountedRef.current = false;
     }
-  }, [device.path]);
+  }, []);
+
+  /**
+   * Update refs
+   * 
+   * @returns {void}
+   */
+  React.useEffect(() => {
+    appRef.current = app;
+  }, [app.tab, app.tabs]);
 
   /**
    * Observe last scroll position
@@ -178,7 +246,7 @@ export default function Monitor({ device }) {
     }
 
     element.scrollTop = element.scrollHeight;
-  }, [lines.length])
+  }, [lines.length]);
 
   return (
     <div className={`flex flex-col h-full ${device.path != app.tab ? 'hidden' : ''}`}>

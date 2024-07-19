@@ -41,14 +41,14 @@ export default function AppProvider({ children }) {
    * @returns {void}
    */
   const addTab = (id, tab) => {
+    const current = Object.assign({}, state.tabs);
+    const tabs = { ...current, [id]: tab };
+
     setState(prev => ({
       ...prev,
       tab: id,
-      tabs: {
-        ...prev.tabs,
-        [id]: tab
-      }
-    }))
+      tabs
+    }));
   }
 
   /**
@@ -73,9 +73,20 @@ export default function AppProvider({ children }) {
    * 
    * @returns {void}
    */
-  const setTabData = (id, data, value) => {
-    const tabs = Object.assign({}, state.tabs);
-    tabs[id][data] = value;
+  const setTabData = (id, data) => {
+    const current = Object.assign({}, state.tabs);
+
+    if (!current[id]) {
+      return;
+    }
+
+    const tabs = { 
+      ...current, 
+      [id]: {
+        ...current[id],
+        ...data
+      }
+    }
 
     setState(prev => ({
       ...prev,
