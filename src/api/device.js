@@ -1,4 +1,5 @@
 import { SerialPort } from 'serialport';
+import { ReadlineParser } from 'serialport';
 
 /**
  * Serial port cache
@@ -28,8 +29,9 @@ export const connect = async (event, config, retry = false) => {
       return resolve(true);
     });
 
+    const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
     // listen for data stream
-    port.on('data', (data) => {
+    parser.on('data', (data) => {
       console.log('[serialport:data]', data);
 
       event
